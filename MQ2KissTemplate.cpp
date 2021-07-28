@@ -1,18 +1,12 @@
 // MQ2KissTemplate.cpp - 10/12/2018
 // By Chatwiththisname @ Redguides.com
 
-
-
-#include "../MQ2Plugin.h"
+#include <mq/Plugin.h>
 #include <iostream>
 #include <fstream>
-using namespace std;
 
-#define PLUGIN_NAME "MQ2KissTemplate"
-#define VERSION 0.1
-
-PreSetup(PLUGIN_NAME);
-PLUGIN_VERSION(VERSION);
+PreSetup("MQ2KissTemplate");
+PLUGIN_VERSION(0.1);
 
 //Variables
 bool oldCond = false;
@@ -87,34 +81,34 @@ void TemplateCommand(PSPAWNINFO pChar, PCHAR szLine)
 
 
 
-	sprintf_s(filename, "%s\\Macros\\Kissassist_%s.ini", gszINIPath, pChar->Name);
+	sprintf_s(filename, "%s\\Kissassist_%s.ini", gPathConfig, pChar->Name);
 	if (useClass)
 		sprintf_s(OurClass, "%s", tempClass);
 	if (!useClass)
-		sprintf_s(OurClass, "%s", pEverQuest->GetClassThreeLetterCode(GetCharInfo2()->Class));
+		sprintf_s(OurClass, "%s", pEverQuest->GetClassThreeLetterCode(GetPcProfile()->Class));
 	if (useLevel)
 		OurLevel = atoi(tempLevel);
 	if (!useLevel)
 		OurLevel = GetCharInfo()->pSpawn->Level;
-	sprintf_s(newfilename, "%s\\Macros\\Kissassist_%d_%s.ini", gszINIPath, OurLevel, OurClass);
+	sprintf_s(newfilename, "%s\\Kissassist_%d_%s.ini", gPathConfig, OurLevel, OurClass);
 	//WriteChatf("Copying Key parts of %s to a new file %s", filename, newfilename);
 	useConditions = GetPrivateProfileInt("General", "ConditionsOn", 0, filename);
 	//WriteChatf("useConditions: %d", useConditions);
 	if (useConditions == 0)
 		sprintf_s(ConditionsFile, "");
 	if (useConditions == 1)
-		sprintf_s(ConditionsFile, "%s\\Macros\\Kissassist_%s_Conditions.ini", gszINIPath, pChar->Name);
+		sprintf_s(ConditionsFile, "%s\\Kissassist_%s_Conditions.ini", gPathConfig, pChar->Name);
 	if (useConditions == 2)
-		sprintf_s(ConditionsFile, "%s\\Macros\\Kissassist_%s.ini", gszINIPath, pChar->Name);
+		sprintf_s(ConditionsFile, "%s\\Kissassist_%s.ini", gPathConfig, pChar->Name);
 
 	//Lemme insert the start of code tags for the user using ios::in - this should overwrite the file for us.
 	remove(newfilename);
 	WritePrivateProfileString("t", "t", "2", newfilename);
-	ofstream myfile;
-	myfile.open(newfilename, ios::in);
+	std::ofstream myfile;
+	myfile.open(newfilename, std::ios::in);
 	char codetag[MAX_STRING] = { 0 };
 	sprintf_s(codetag, "[CODE=INI]");
-	myfile << codetag << endl;
+	myfile << codetag << std::endl;
 	myfile.close();
 
 	//General Section
@@ -275,7 +269,7 @@ void TemplateCommand(PSPAWNINFO pChar, PCHAR szLine)
 	if (fKAVersion && fKAVersion > 11.004) {
 		char temp[MAX_STRING] = "NULL";
 		char gemNum[8] = "NULL";
-		
+
 		for (int i = 1; i < 15; i++) {
 			sprintf_s(gemNum, 8, "Gem%i", i);
 			if (GetPrivateProfileString("Spells", gemNum, 0, temp, MAX_STRING, filename) == 0) {
@@ -293,8 +287,8 @@ void TemplateCommand(PSPAWNINFO pChar, PCHAR szLine)
 	}
 
 	//Lets close the code tags now. Open newfilename to append to the end of it with ios::app
-	myfile.open(newfilename, ios::app);
-	myfile << "[/CODE]" << endl;
+	myfile.open(newfilename, std::ios::app);
+	myfile << "[/CODE]" << std::endl;
 	myfile.close();
 
 	WriteChatf("\agI'm finished! Template saved to Kissassist_%d_%s", OurLevel, OurClass);
@@ -306,7 +300,7 @@ void TemplateCommand(PSPAWNINFO pChar, PCHAR szLine)
 		WritePrivateProfileString("KConditions", "CondSize", temp, newfilename);
 	}
 	condNumber = 1;
-	//reset my arguement modified variables back to their default settings.  
+	//reset my arguement modified variables back to their default settings.
 	sprintf_s(tempClass, "");
 	sprintf_s(tempLevel, "");
 	useLevel = false;
@@ -345,7 +339,7 @@ void GetINILoop(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX
 		//If there is something stored in our current INI at this section and key, then lets do some copying.
 		if (GetPrivateProfileString(Section, KeyNum, 0, temp, MAX_STRING, filename) != 0)
 		{
-			//If Section, Key is not equal to "NULL" then lets write it to the new file. 
+			//If Section, Key is not equal to "NULL" then lets write it to the new file.
 			if (_stricmp(temp, "NULL")) {
 
 				//if |Cond is found in the string for temp, set condfound == true;
@@ -353,7 +347,7 @@ void GetINILoop(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX
 					//WriteChatf("Condition Found");
 					condFound = true;
 				}
-				//if converting to old conditions, remove |Cond## from the end of the string. 
+				//if converting to old conditions, remove |Cond## from the end of the string.
 				//WriteChatf("oldCond: %d, condFound: %d", oldCond, condFound);
 				if (oldCond && condFound) {
 					char* p = strrchr(temp, '|');
@@ -363,18 +357,18 @@ void GetINILoop(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX
 					//WriteChatf("CondNumber: %s", szCondNumber);
 				}
 				WritePrivateProfileString(Section, KeyNum, temp, newfilename);
-				//does it already have the KA11 Condition style. 
+				//does it already have the KA11 Condition style.
 
 				//If the section isn't KConditions - Lets process conditions.
 				if (_stricmp(Section, "KConditions")) {
 					//If Section, KeyCond# has a value  and we didn't find a |Cond# in the key in our current condition file, then lets see about copying some things.
 					if (GetPrivateProfileString(Section, KeyNumCond, 0, tempCond, MAX_STRING, ConditionsFile) != 0 && !condFound) {
-						//If the condition isn't TRUE, isn't NULL,  isn't FALSE, and oldCond isn't true, then lets upgrade it to KA11. 
+						//If the condition isn't TRUE, isn't NULL,  isn't FALSE, and oldCond isn't true, then lets upgrade it to KA11.
 						if (_stricmp(tempCond, "TRUE") && _stricmp(tempCond, "NULL") && _stricmp(tempCond, "FALSE") && !oldCond) {
-							//set CondTemp to our current condNumber and then write the condition to the new file. 
+							//set CondTemp to our current condNumber and then write the condition to the new file.
 							sprintf_s(condTemp, "Cond%d", condNumber);
 							WritePrivateProfileString("KConditions", condTemp, tempCond, newfilename);
-							//Just to be sure, if the Section, KeyNum isn't blank, then lets append |Cond# to the end of the current key in the new file.  
+							//Just to be sure, if the Section, KeyNum isn't blank, then lets append |Cond# to the end of the current key in the new file.
 							if (GetPrivateProfileString(Section, KeyNum, 0, temp, MAX_STRING, filename) != 0) {
 								sprintf_s(condTemp, "|Cond%d", condNumber);
 								strcat_s(temp, condTemp);
@@ -383,7 +377,7 @@ void GetINILoop(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX
 							//We've used this Cond#, so lets add 1 to it.
 							condNumber += 1;
 						}
-						//If oldCond is true, then we're going to write using the old conditions style. 
+						//If oldCond is true, then we're going to write using the old conditions style.
 						if (oldCond) WritePrivateProfileString(Section, KeyNumCond, tempCond, newfilename);
 					}
 					else if (condFound) {
@@ -441,5 +435,5 @@ void ParseArg(CHAR Arg[MAX_STRING])
 
 inline bool InGame()
 {
-	return(GetGameState() == GAMESTATE_INGAME && GetCharInfo() && GetCharInfo()->pSpawn && GetCharInfo2());
+	return(GetGameState() == GAMESTATE_INGAME && GetCharInfo() && GetCharInfo()->pSpawn && GetPcProfile());
 }
