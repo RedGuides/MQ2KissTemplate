@@ -28,26 +28,26 @@ int useConditions = 0;
 //End Variables
 
 //Prototypes
-void GetINI(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX_STRING], char ININame[MAX_STRING]);
-void GetINILoop(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX_STRING], char ININame[MAX_STRING]);
-void ParseArg(CHAR Arg[MAX_STRING]);
-void TemplateCommand(PSPAWNINFO pChar, PCHAR szLine);
+void GetINI(const char* Section, const char* Key, const char* Default, const char* ININame);
+void GetINILoop(const char* Section, const char* Key, const char* Default, const char* ININame);
+void ParseArg(const char* Arg);
+void TemplateCommand(PlayerClient*, const char* szLine);
 inline bool InGame();
 //End Prototypes
 
 // Called once, when the plugin is to initialize
-PLUGIN_API VOID InitializePlugin(VOID)
+PLUGIN_API void InitializePlugin()
 {
 	AddCommand("/maketemplate", TemplateCommand);
 }
 
 // Called once, when the plugin is to shutdown
-PLUGIN_API VOID ShutdownPlugin(VOID)
+PLUGIN_API void ShutdownPlugin()
 {
 	RemoveCommand("/maketemplate");
 }
 
-PLUGIN_API VOID SetGameState(DWORD GameState)
+PLUGIN_API void SetGameState(DWORD GameState)
 {
 	//if (GameState==GAMESTATE_INGAME)
 	// create custom windows if theyre not set up, etc
@@ -55,12 +55,11 @@ PLUGIN_API VOID SetGameState(DWORD GameState)
 
 
 // This is called every time MQ pulses
-PLUGIN_API VOID OnPulse(VOID)
+PLUGIN_API void OnPulse()
 {
-
 }
 
-void TemplateCommand(PSPAWNINFO pChar, PCHAR szLine)
+void TemplateCommand(PlayerClient*, const char* szLine)
 {
 	if (!InGame()) return;
 
@@ -81,7 +80,7 @@ void TemplateCommand(PSPAWNINFO pChar, PCHAR szLine)
 
 
 
-	sprintf_s(filename, "%s\\Kissassist_%s.ini", gPathConfig, pChar->Name);
+	sprintf_s(filename, "%s\\Kissassist_%s.ini", gPathConfig, pLocalPlayer->Name);
 	if (useClass)
 		sprintf_s(OurClass, "%s", tempClass);
 	if (!useClass)
@@ -97,9 +96,9 @@ void TemplateCommand(PSPAWNINFO pChar, PCHAR szLine)
 	if (useConditions == 0)
 		sprintf_s(ConditionsFile, "");
 	if (useConditions == 1)
-		sprintf_s(ConditionsFile, "%s\\Kissassist_%s_Conditions.ini", gPathConfig, pChar->Name);
+		sprintf_s(ConditionsFile, "%s\\Kissassist_%s_Conditions.ini", gPathConfig, pLocalPlayer->Name);
 	if (useConditions == 2)
-		sprintf_s(ConditionsFile, "%s\\Kissassist_%s.ini", gPathConfig, pChar->Name);
+		sprintf_s(ConditionsFile, "%s\\Kissassist_%s.ini", gPathConfig, pLocalPlayer->Name);
 
 	//Lemme insert the start of code tags for the user using ios::in - this should overwrite the file for us.
 	remove(newfilename);
@@ -310,16 +309,16 @@ void TemplateCommand(PSPAWNINFO pChar, PCHAR szLine)
 }
 
 
-void GetINI(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX_STRING], char ININame[MAX_STRING])
+void GetINI(const char* Section, const char* Key, const char* Default, const char* ININame)
 {
 	char temp[MAX_STRING] = { 0 };
-	if (GetPrivateProfileString(Section, Key, 0, temp, MAX_STRING, ININame) != 0)
+	if (GetPrivateProfileString(Section, Key, nullptr, temp, MAX_STRING, ININame) != 0)
 	{
 		WritePrivateProfileString(Section, Key, temp, newfilename);
 	}
 }
 
-void GetINILoop(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX_STRING], char ININame[MAX_STRING])
+void GetINILoop(const char* Section, const char* Key, const char* Default, const char* ININame)
 {
 	CHAR str[MAX_STRING] = "";
 	bool condFound = false;
@@ -343,7 +342,7 @@ void GetINILoop(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX
 			if (_stricmp(temp, "NULL")) {
 
 				//if |Cond is found in the string for temp, set condfound == true;
-				if (strstr(temp, "|Cond") != NULL) {
+				if (strstr(temp, "|Cond") != nullptr) {
 					//WriteChatf("Condition Found");
 					condFound = true;
 				}
@@ -395,7 +394,7 @@ void GetINILoop(char Section[MAX_STRING], char Key[MAX_STRING], char Default[MAX
 }
 
 
-void ParseArg(CHAR Arg[MAX_STRING])
+void ParseArg(const char* Arg)
 {
 	if (strlen(Arg)) {
 		//WriteChatf("Parsing Arg: %s", Arg);
